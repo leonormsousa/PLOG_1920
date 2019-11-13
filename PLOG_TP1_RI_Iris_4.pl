@@ -1,4 +1,28 @@
-initialBoard([[1,2,1,1,2,1,2,2],[2,1,2,2,1,2,1,2,1], [2,1,1,2,2,1,2,2,1,2], [1,2,1,1,2,1,1,2,1,2,1], [1,2,2,2,2,2,2,2,1,2,1,1],  [2,1,2,2,1,1,1,2,1,1,1,2,1], [1,2,1,2,1,2,1,1,1,2,1,2,2,1], [2,1,2,1,1,2,1,1,2,2,1,2,1,2,2], [1,2,2,1,1,2,1,1,1,2,2,1,2,2],[2,1,1,2,1,2,1,2,2,1,1,2,1], [2,1,2,2,2,2,1,2,2,1,1,2], [1,1,2,1,2,1,1,1,2,2,2], [1,2,2,1,1,2,2,2,1,1], [1,2,2,1,1,2,2,1,2],[2,2,1,2,1,1,2,1]]).
+/**board([
+    [7, [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B']],
+    [6, [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B']],
+    [5, [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B']],
+    [4, [-10, 'B'], [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B'], [10, 'B']],
+    [3, [-11, 'B'], [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B'], [11, 'B']],
+    [2, [-12, 'B'], [-10, 'B'], [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B'], [10, 'B'], [12, 'B']],
+    [1, [-13, 'B'], [-11, 'B'], [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B'], [11, 'B'], [13, 'B']],
+    [0, [-14, 'B'], [-12, 'B'], [-10, 'B'], [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B'], [10, 'B'], [12, 'B'], [14, 'B']],
+    [-1, [-13, 'B'], [-11, 'B'], [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B'], [11, 'B'], [13, 'B']],
+    [-2, [-12, 'B'], [-10, 'B'], [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B'], [10, 'B'], [12, 'B']],
+    [-3, [-11, 'B'], [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B'], [11, 'B']],
+    [-4, [-10, 'B'], [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B'], [10, 'B']],
+    [-5, [-9, 'B'], [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B'], [9, 'B']],
+    [-6, [-8, 'B'], [-6, 'B'], [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B'], [6, 'B'], [8, 'B']],
+    [-7, [-7, 'B'], [-5, 'B'], [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B'], [5, 'B'], [7, 'B']]
+]).*/
+
+board([
+    [2, [-2, 'B'], [0, 'B'], [2, 'B']],
+    [1, [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B']],
+    [0, [-4, 'B'], [-2, 'B'], [0, 'B'], [2, 'B'], [4, 'B']],
+    [-1, [-3, 'B'], [-1, 'B'], [1, 'B'], [3, 'B']],
+    [-2, [-2, 'B'], [0, 'B'], [2, 'B']]
+]).
 
 displayMenu :-
     write('|                                                       |\n'),
@@ -21,31 +45,50 @@ displayMenu :-
     write('|              |_________________________|              |\n'),
     write('|                                                       |\n'),
     write('|                                                       |\n').
-   
-piece(1) :- write('1 ').
-piece(b) :- write('B ').
-piece(2) :- write('2 ').
-drawSeparator(1) :- write('       /').
-drawSeparator(2) :- write('      /').
-drawSeparator(3) :- write('     /').
-drawSeparator(4) :- write('    /').
-drawSeparator(5) :- write('   /').
-drawSeparator(6) :- write('  /').
-drawSeparator(7) :- write(' /').
-drawSeparator(8) :- write('|').
-drawSeparator(9) :- write(' \\').
-drawSeparator(10) :- write('  \\').
-drawSeparator(11) :- write('   \\').
-drawSeparator(12) :- write('    \\').
-drawSeparator(13) :- write('     \\').
-drawSeparator(14) :- write('      \\').
-drawSeparator(15) :- write('       \\').
-drawLine([], 1) :- write('\\ \n').
-drawLine([], 2) :- write('| \n').
-drawLine([], 3) :- write('/ \n').
-drawLine([H | T], N) :- piece(H), drawLine(T, N).
 
-parseInput(1, Board) :- !, displayBoard(Board, 1).
+drawSpace(0).
+drawSpace(N) :- write(' '), N1 is N-1, drawSpace(N1).
 
-displayBoard([H|T], N):- drawSeparator(N), N1 is N+1, (N1 == 9 -> drawLine(H,2);(N1 >= 9 -> drawLine(H,3); drawLine(H,1))) , displayBoard(T, N1).
-display_game(Board, Player) :- displayMenu, write('--> Insert your option: '), read(Input), \+parseInput(Input, Board).
+displayCell([_|[P]]):- write(P), write(' ').
+displayLineCells([]).
+displayLineCells([H|T]):- displayCell(H), displayLineCells(T).
+displayLine([H|T]) :- (H<0 -> write(H); write('0'), write(H)), (H>0 -> N1 is H+1, drawSpace(N1); N1 is -H+1, drawSpace(N1)), (H<0 -> write('\\ '); (H>0 -> write('/ '); write('| '))), displayLineCells(T), (H<0 -> write('/ \n'); (H>0 -> write('\\ \n'); write('| \n'))).
+displayBoard([]).
+displayBoard([H|T]) :- displayLine(H), displayBoard(T).
+
+parseInput(1, Board) :- displayBoard(Board), implement_moves(['1', 1, -3, -2, 2], Board, NewBoard), displayBoard(NewBoard), adjacentPieces(2, -2, -2, -2), displayBoard(NewBoard).
+%display_game(Board, Player).
+
+play :- board(Board), displayMenu, write('--> Insert your option: '), read(Input), \+parseInput(Input, Board).
+
+
+% Move tem o formato
+% Move[player, line1, column1, line2, column2]
+
+cellFull([[L|[[C, P]|T1]]|T], Line, Column) :- (L=Line -> (C=Column -> P='B'; cellFull([[L|T1]|T], Line, Column)); cellFull(T, Line, Column)).
+
+adjacentPieces(Line1, Column1, Line2, Column2) :- (Line1 =:= Line2, Column1 =:= Column2 + 2);
+                                                    (Line1 =:= Line2, Column1 =:= Column2 - 2);
+                                                    (Line1 =:= Line2 + 1, Column1 =:= Column2 + 1);
+                                                    (Line1 =:= Line2 + 1, Column1 =:= Column2 - 1);
+                                                    (Line1 =:= Line2 - 1, Column1 =:= Column2 + 1);
+                                                    (Line1 =:= Line2 - 1, Column1 =:= Column2 - 1).
+
+%verifyMove(Board, Line1, Column1, Line2, Column2) :-
+%valid_moves(Board, Player, ListOfMoves) :- .
+
+changeCell(Player, Column, [], []).
+changeCell(Player, Column, [[H|T1]|T], NewLine) :- changeCell(Player, Column, T, AuxLine), (H=Column -> append([[Column, Player]], AuxLine, NewLine); append([[H|T1]], AuxLine, NewLine)).
+
+implement_move(Player, Line, Column, [], []).
+implement_move(Player, Line, Column, [[H|T1]|T], NewBoard) :- implement_move(Player, Line, Column, T, AuxBoard), (H=Line -> changeCell(Player, Column, T1, NewLine), append([[H|NewLine]], AuxBoard, NewBoard); append([[H|T1]], AuxBoard, NewBoard)).
+
+implement_moves([Player|[Line1|[Column1|[Line2|[Column2]]]]], Board, NewBoard) :- implement_move(Player, Line1, Column1, Board, BoardAux), implement_move(Player, Line2, Column2, BoardAux, NewBoard).
+
+move([Player|Cells], Board, NewBoard) :- valid_moves(Board, Player, ListOfMoves), member([Player|Cells], ListOfMoves), implement_moves([Player|Cells], Board, NewBoard).
+
+%game_over(Board, Winner) :- .
+
+%value(Board, Player, Value) :- .
+
+%choose_move(Board, Level, Move): .
