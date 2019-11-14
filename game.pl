@@ -18,7 +18,20 @@ cellColor(Line, Column) :- abs(Line) + abs(Column) =:= 4.
 verifyMove(Board, Line1, Column1, [], []) :- cellEmpty(Board, Line1, Column1), \+cellColor(Line1, Column1).
 verifyMove(Board, Line1, Column1, Line2, Column2) :- cellEmpty(Board, Line1, Column1), cellEmpty(Board, Line2, Column2), cellColor(Line1, Column1), Line2 =:= -Line1, Column2 =:= -Column1.
 verifyMove(Board, Line1, Column1, Line2, Column2) :- cellEmpty(Board, Line1, Column1), cellEmpty(Board, Line2, Column2), \+cellColor(Line1, Column1), \+cellColor(Line2, Column2), \+adjacentPieces(Line1, Column1, Line2, Column2).
-%valid_moves(Board, Player, ListOfMoves) :- .
+
+verifyCellMoves(Board, [], ValidMoves).
+verifyCellMoves(Board, [Line1, Column1, Line2, Column2], ValidMoves):- (verifyMove(Board,Line1, Column1, Line2, Column2) -> append([], [Line1, Column1, Line2, Column2], ValidMoves);!).
+verifyCellMoves(Board, [ [Line1, Column1, Line2, Column2] | T], ValidMoves):- (verifyMove(Board, Line1, Column1, Line2, Column2)-> verifyCellMoves(Board, T, AuxValidMoves), append([Line1, Column1, Line2, Column2], AuxValidMoves, ValidMoves); verifyCellMoves(Board,T, AuxValidMoves)).
+
+generateInnerMoves([], Line1, Column1, Moves).
+generateInnerMoves([[Line | [[Cell, Value] | T1] ] | T], Line1,Column1, Moves):- generateInnerMoves([T1 | T], Line1,Column1,AuxMoves), append([Line1, Column1, Line, Cell], AuxMoves, Moves).
+
+generateCellMoves(Board, Line1, Column1, CellMoves):- (cellColor(Line1, Column1)->Line2 is -Line1, Column2 is -Column1, append([],[Line1,Column1,Line2,Column2], CellMoves); generateInnerMoves(Board, Line1, Column1, CellMoves)).
+
+generateValidMoves([], Player,Moves).
+generateValidMoves([[Line | [[Cell, Value] | T1] ] | T], Player, Moves):- generateCellMoves(Board, Line, Cell, AllMoves), verifyCellMoves([[Line | [[Cell, Value] | T1] ] | T],AllMoves, CellMoves), generateValidMoves([[Line |T1] |T], Player,AuxMoves), append(CellMoves,AuxMoves,Moves).
+
+valid_moves(Board, Player, ListOfMoves) :- generateValidMoves(Board, Player, ListOfMoves).
 
 changeCell(Player, Column, [], []).
 changeCell(Player, Column, [[H|T1]|T], NewLine) :- changeCell(Player, Column, T, AuxLine), (H=Column -> append([[Column, Player]], AuxLine, NewLine); append([[H|T1]], AuxLine, NewLine)).
@@ -30,7 +43,14 @@ implement_moves([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- implem
 
 move([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- verifyMove(Board, Line1, Column1, Line2, Column2), implement_moves([Player, Line1, Column1, Line2, Column2], Board, NewBoard).
 
-%game_over(Board, Winner) :- .
+calculateColored([], Player, ColoredCells).
+calculateColored([[H|T1]|T], Player, ColoredCells):- (cellColor(H,T1) -> calculateColored(T,AuxColored), append([H|T1],AuxColored, ColoredCells); calculateColored(T,ColoredCells)).
+
+calculatePoints( [[H|T1]|T], Player, Points) :-  calculateColored(T1, Player, ColoredCells), write(ColoredCells), Points is 1.
+
+game_over(Board, Winner) :- valid_moves(Board, 1, MovesP1), valid_moves(Board,2,MovesP2), 
+(\+ MovesP1 = [_|_],\+ MovesP2 = [_|_] -> 
+(calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), PointsP1 > PointsP2 ->Winner is 1; Winner is 2); !) .
 
 %value(Board, Player, Value) :- .
 
