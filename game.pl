@@ -43,19 +43,67 @@ implement_moves([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- implem
 
 move([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- verifyMove(Board, Line1, Column1, Line2, Column2), implement_moves([Player, Line1, Column1, Line2, Column2], Board, NewBoard).
 
-calculateColored([], _).
-calculateColored([[H|T1]|T], ColoredCells):- (cellColor(H,T1) -> calculateColored(T,AuxColored), append([H|T1],AuxColored, ColoredCells); calculateColored(T,ColoredCells)).
+calculateCellsPlayer([], _, _, []).
+calculateCellsPlayer([[Column, Value]|T], Line, Player, PlayerCells) :- (Value==Player -> calculateCellsPlayer(T, Line, Player, PlayerCellsAux), append(PlayerCellsAux, [[Line, Column]], PlayerCells); calculateCellsPlayer(T, Line, Player, PlayerCells)).
 
-calculatePoints( [[_|T1]|_], Points) :-  calculateColored(T1, ColoredCells), write(ColoredCells), Points is 1.
+calculateCellsPlayerLines([], _, []).
+calculateCellsPlayerLines([[Line|Cells]|T], Player, PlayerCells):- calculateCellsPlayerLines(T, Player, PlayerCellsAux), calculateCellsPlayer(Cells, Line, Player, PlayerCellsAuxx), append(PlayerCellsAux, PlayerCellsAuxx, PlayerCells).
+
+calculateColored([], []).
+calculateColored([[Line, Column]|T], ColoredCells) :- (cellColor(Line, Column) -> calculateColored(T, ColoredCellsAux), append(ColoredCellsAux, [[Line, Column]], ColoredCells); calculateColored(T, ColoredCells)).
+
+calculateScore([], 0).
+calculateScore([[Line,Column] | T], GroupPoints):- calculateScore(T, GroupPointsAux), (cellColor(Line, Column)-> GroupPoints = (GroupPointsAux+1); !).
+
+calculateGroupsScore([], _).
+calculateGroupsScore([Group|T], Points):- calculateGroupsScore(T, PointsAux), calculateScore(Group, PointsGroup), append(PointsAux, PointsGroup, Points).
+
+calculatePoints(Board, Player, Points) :- 
+        calculateCellsPlayerLines(Board, Player, PlayerCells), 
+        calculateColored(PlayerCells, ColoredCells), 
+        calculateGroups(PlayerCells, ColoredCells, [], FinalGroups, [], UsedCells),
+        calculateGroupsScore(FinalGroups, Points).
+
+%calculateGroup(+PlayerCells, +PlayerCellsToIterate, +StartingCell, +InitialGroup, -FinalGroup, +InitialUsedCells, -FinalUsedCells)
+calculateGroup(_, [], _, InitialGroup, InitialGroup, InitialUsedCells, InitialUsedCells).
+calculateGroup(PlayerCells, [[Line, Column]|T], [ColoredLine, ColoredColumn], Igroup, Fgroup, IusedCells, FusedCells) :- 
+                                    (adjacentPieces(Line, Column, ColoredLine, ColoredColumn), \+ member([Line, Column], IusedCells) -> 
+                                        append(IusedCells, [[Line, Column]], UsedCells1), 
+                                        append(Igroup, [[Line, Column]], Group1), 
+                                        calculateGroup(PlayerCells, T, [ColoredLine, ColoredColumn], Group1, Group2, UsedCells1, UsedCells2), 
+                                        calculateGroup(PlayerCells, PlayerCells, [Line, Column], Group2, Fgroup, UsedCells2, FusedCells); 
+                                        calculateGroup(PlayerCells, T, [ColoredLine, ColoredColumn], Igroup, Fgroup, IusedCells, FusedCells)).
+
+%calculateGroups(+PlayerCells, +ColoredCells, +InitialGroups, -FinalGroups, +InitialUsedCells, -FinalUsedCells)
+calculateGroups(_, [], InitialGroups, InitialGroups, InitialUsedCells, InitialUsedCells).
+calculateGroups(PlayerCells, [[Line, Column]|T], Igroups, Fgroups, IusedCells, FusedCells) :- 
+                            (member([Line,Column], IusedCells) ->
+                                calculateGroups(PlayerCells, T, Igroups, Fgroups, IusedCells, FusedCells);
+                                append(IusedCells, [[Line, Column]], UsedCells1),
+                                calculateGroup(PlayerCells, PlayerCells, [Line, Column], [[Line, Column]], Group1, UsedCells1, UsedCells2),
+                                append(Igroups, [Group1], Group2),
+                                calculateGroups(PlayerCells, T, Group2, Fgroups, UsedCells2, FusedCells)).
 
 lineFull([]).
-lineFull([_,[_,Value] | T]) :- Value \= 'B', lineFull(T). 
+lineFull([[_,Value] | T]) :- Value \= 'B', lineFull(T). 
 
 boardFull([]).
-boardFull([Line|T]):- lineFull(Line), boardFull(T).
+boardFull([[_|TLine]|T]):- lineFull(TLine), boardFull(T).
 
-game_over(Board, Winner) :- (boardFull(Board) ->
-(calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), PointsP1 > PointsP2 -> Winner = 1; Winner = 2); !) .
+deleteElement([], _, InitialList, InitialList).
+deleteElement([Elem | T], Element, InitialList, NewList):- ( Element \= Elem -> append(InitialList, Elem, AuxList), deleteElement(T, Element, AuxList, NewList); append(InitialList, T, NewList)).
+
+calculateWinner([], [], 0).
+calculateWinner([], _, 1).
+calculateWinner(_, [], 2).
+calculateWinner(PointsP1, PointsP2, Winner):-  maxList(PointsP1, MaxP1), maxList(PointsP2, MaxP2),
+                        (MaxP1 == MaxP2 -> 
+                            deleteElement(PointsP1, MaxP1, [], NewPointsP1), 
+                            deleteElement(PointsP2, MaxP2, [], NewPointsP2), 
+                            calculateWinner(NewPointsP1,NewPointsP2, Winner); 
+                            (MaxP2 > MaxP1 -> Winner = 2; Winner = 1)).
+game_over(Board, Winner) :- (boardFull(Board) ->  write(2),
+calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), write(1), calculateWinner(PointsP1, PointsP2, Winner), fail; !) .
 
 %value(Board, Player, Value) :- .
 
