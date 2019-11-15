@@ -8,19 +8,19 @@ play(Board, Player) :- write('\n--> P'), write(Player), write(': Choose a Line f
                 (\+ number(Line2) -> 
                     (move([Player, Line1, Column1, [], []], Board, NewBoard) ->
                         displayBoard(NewBoard),
-                        game_over(NewBoard, Winner),
-                        (Player == 1 -> play(NewBoard, 2); play(NewBoard, 1));
+                        game_over(NewBoard, Winner), (Winner \= 0 -> write('The winner is: P'), write(Winner), break;
+                        (Player == 1 -> play(NewBoard, 2); play(NewBoard, 1)));
                         writeError, displayBoard(Board), play(Board, Player));
                 (abs(Line2) > 2 -> writeError('Piece2 out of bounds'), play(Board, Player), fail;!),
                 write('--> P'), write(Player), write(': Choose a Column for Piece2 '), read(Column2),
                 (abs(Line2) + abs(Column2) > 4 -> writeError('Piece2 out of bounds'), play(Board, Player), fail;!),
                 ((abs(Line2) + abs(Column2)) mod 2 =:= 1 -> writeError('Piece2 doesnt exit'), play(Board, Player), fail; !),
                 (Line1 =:= Line2, Column1 =:= Column2 -> writeError('Pieces are the same'), play(Board, Player), fail; !)),
-                displayBoard(Board),
-                (move([Player, Line1, Column1, Line2, Column2], Board, NewBoard) ->
+                (move([Player, Line1, Column1, Line2, Column2], Board, NewBoard), write(4) ->
                     displayBoard(NewBoard),
-                    (game_over(NewBoard, Winner) ->
-                    (Player == 1 -> play(NewBoard, 2); play(NewBoard, 1));!);
+                    game_over(NewBoard, Winner), (Winner \= 0 ->                     
+                    writeError('The Winner is:  P'), write(Winner);
+                     (Player == 1 -> play(NewBoard, 2); play(NewBoard, 1))); 
                     writeError, displayBoard(Board), play(Board, Player)).
 
 firstPlay(Board) :- write('\n--> P1: Choose a Line'), read(Line1),
@@ -33,7 +33,7 @@ firstPlay(Board) :- write('\n--> P1: Choose a Line'), read(Line1),
                         writeError, displayBoard(Board), firstPlay(Board))))).
 
 
-startGame(Board) :- displayBoard(Board), firstPlay(Board).
+startGame(Board) :- displayBoard(Board), ( \+ firstPlay(Board) -> write('Game is over');!) .
 
 parseInput(1, Board) :- startGame(Board).
 

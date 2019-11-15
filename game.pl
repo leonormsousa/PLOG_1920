@@ -53,15 +53,15 @@ calculateColored([], []).
 calculateColored([[Line, Column]|T], ColoredCells) :- (cellColor(Line, Column) -> calculateColored(T, ColoredCellsAux), append(ColoredCellsAux, [[Line, Column]], ColoredCells); calculateColored(T, ColoredCells)).
 
 calculateScore([], 0).
-calculateScore([[Line,Column] | T], GroupPoints):- calculateScore(T, GroupPointsAux), (cellColor(Line, Column)-> GroupPoints = (GroupPointsAux+1); !).
+calculateScore([[Line,Column] | T], GroupPoints):- calculateScore(T, GroupPointsAux), (cellColor(Line, Column)-> GroupPoints is GroupPointsAux+1; GroupPoints is GroupPointsAux, !).
 
-calculateGroupsScore([], _).
-calculateGroupsScore([Group|T], Points):- calculateGroupsScore(T, PointsAux), calculateScore(Group, PointsGroup), append(PointsAux, PointsGroup, Points).
+calculateGroupsScore([], []).
+calculateGroupsScore([Group|T], Points):- calculateGroupsScore(T, PointsAux), calculateScore(Group, PointsGroup), append(PointsAux, [PointsGroup], Points).
 
 calculatePoints(Board, Player, Points) :- 
         calculateCellsPlayerLines(Board, Player, PlayerCells), 
         calculateColored(PlayerCells, ColoredCells), 
-        calculateGroups(PlayerCells, ColoredCells, [], FinalGroups, [], UsedCells),
+        calculateGroups(PlayerCells, ColoredCells, [], FinalGroups, [], _),
         calculateGroupsScore(FinalGroups, Points).
 
 %calculateGroup(+PlayerCells, +PlayerCellsToIterate, +StartingCell, +InitialGroup, -FinalGroup, +InitialUsedCells, -FinalUsedCells)
@@ -93,17 +93,30 @@ boardFull([[_|TLine]|T]):- lineFull(TLine), boardFull(T).
 deleteElement([], _, InitialList, InitialList).
 deleteElement([Elem | T], Element, InitialList, NewList):- ( Element \= Elem -> append(InitialList, Elem, AuxList), deleteElement(T, Element, AuxList, NewList); append(InitialList, T, NewList)).
 
+maxlist([],0).
+
+maxlist([Head|Tail],Max) :-
+    maxlist(Tail,TailMax),
+    Head > TailMax,
+    Max is Head.
+
+maxlist([Head|Tail],Max) :-
+    maxlist(Tail,TailMax),
+    Head =< TailMax,
+    Max is TailMax.
+
+
 calculateWinner([], [], 0).
 calculateWinner([], _, 1).
 calculateWinner(_, [], 2).
-calculateWinner(PointsP1, PointsP2, Winner):-  maxList(PointsP1, MaxP1), maxList(PointsP2, MaxP2),
+calculateWinner(PointsP1, PointsP2, Winner):-  maxlist(PointsP1, MaxP1), maxlist(PointsP2, MaxP2),
                         (MaxP1 == MaxP2 -> 
                             deleteElement(PointsP1, MaxP1, [], NewPointsP1), 
                             deleteElement(PointsP2, MaxP2, [], NewPointsP2), 
                             calculateWinner(NewPointsP1,NewPointsP2, Winner); 
                             (MaxP2 > MaxP1 -> Winner = 2; Winner = 1)).
-game_over(Board, Winner) :- (boardFull(Board) ->  write(2),
-calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), write(1), calculateWinner(PointsP1, PointsP2, Winner), fail; !) .
+game_over(Board, Winner) :- (boardFull(Board) ->  
+calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), calculateWinner(PointsP1, PointsP2, Winner); Winner = 0) .
 
 %value(Board, Player, Value) :- .
 
