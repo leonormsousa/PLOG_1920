@@ -1,12 +1,13 @@
-game(Board, Player1, Player2, Difficulty) :-  
-    (Player1 = 'C2' -> choose_move(Board, 2, Difficulty, MoveAux), append([2], MoveAux, Move),
+game(Board, Player1, Player2, Difficulty) :- value(Board, 1, Value1), write('Value1:'), write(Value1), value(Board, 2, Value2), write('\nValue2:'), write(Value2), write('\n'),
+    (Player1 = 'C2' -> choose_move(Board, Difficulty, MoveAux), append([2], MoveAux, Move),
         (move(Move, Board, NewBoard) ->
             displayBoard(NewBoard),
             game_over(NewBoard, Winner), (Winner \= 0 ->                     
             writeError('The Winner is:  P'), write(Winner);
             game(NewBoard, Player2, Player1, Difficulty)); 
             writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty));
-            (Player1 = 'C1' -> choose_move(Board, 1, Difficulty, MoveAux), append([1], MoveAux, Move), 
+            %MoveAux = [Line1, Column1, Line2, Column2]
+            (Player1 = 'C1' -> choose_move(Board, Difficulty, MoveAux), append([1], MoveAux, Move), 
                  (move(Move, Board, NewBoard) ->
                     displayBoard(NewBoard),
                     game_over(NewBoard, Winner), (Winner \= 0 ->                     
@@ -27,7 +28,7 @@ game(Board, Player1, Player2, Difficulty) :-
                         game(NewBoard, Player2, Player1, Difficulty));
                         writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty));
                 (abs(Line2) > 2 -> writeError('Piece2 out of bounds'), game(Board, Player1, Player2, Difficulty), fail;!),
-                write('--> P'), write(Player), write(': Choose a Column for Piece2 '), read(Column2),
+                write('--> P'), write(Player1), write(': Choose a Column for Piece2 '), read(Column2),
                 (abs(Line2) + abs(Column2) > 4 -> writeError('Piece2 out of bounds'), game(Board, Player1, Player2, Difficulty), fail;!),
                 ((abs(Line2) + abs(Column2)) mod 2 =:= 1 -> writeError('Piece2 doesnt exit'), game(Board, Player1, Player2, Difficulty), fail; !),
                 (Line1 =:= Line2, Column1 =:= Column2 -> writeError('Pieces are the same'), game(Board, Player1, Player2, Difficulty), fail; !)),
@@ -39,7 +40,7 @@ game(Board, Player1, Player2, Difficulty) :-
                     writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty)))).
 
 firstPlay(Board, Player1, Player2, Difficulty) :- displayBoard(Board), 
-   (Player1 = 'C1' -> append([1], [1,1,-1,-1], Move), 
+   (Player1 = 'C1' -> append([1], [1,1,[],[]], Move), 
         (move(Move, Board, NewBoard) ->
             displayBoard(NewBoard),
             game(NewBoard, Player2, Player1, Difficulty); 

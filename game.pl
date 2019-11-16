@@ -1,6 +1,3 @@
-% Move tem o formato
-% Move[player, line1, column1, line2, column2]
-
 cellValue([[L|[[C, P]|T1]]|T], Line, Column, Value) :- (L=Line -> (C=Column -> Value=P; cellValue([[L|T1]|T], Line, Column, Value)); cellValue(T, Line, Column, Value)).
 cellEmpty(Board, Line, Column) :- cellValue(Board, Line, Column, Value), Value='B'.
 
@@ -27,6 +24,8 @@ implement_move(Player, Line, Column, [[H|T1]|T], NewBoard) :- implement_move(Pla
 
 implement_moves([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- implement_move(Player, Line1, Column1, Board, BoardAux), implement_move(Player, Line2, Column2, BoardAux, NewBoard).
 
+%move(+Move, +Board, -NewBoard)
+%Move = [player, line1, column1, line2, column2]
 move([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- verifyMove(Board, Line1, Column1, Line2, Column2), implement_moves([Player, Line1, Column1, Line2, Column2], Board, NewBoard).
 
 calculateCellsPlayer([], _, _, []).
@@ -101,9 +100,7 @@ calculateWinner(PointsP1, PointsP2, Winner):-  maxlist(PointsP1, MaxP1), maxlist
                             deleteElement(PointsP2, MaxP2, [], NewPointsP2), 
                             calculateWinner(NewPointsP1,NewPointsP2, Winner); 
                             (MaxP2 > MaxP1 -> Winner = 2; Winner = 1)).
+
+%game_over(+Board, -Winner)
 game_over(Board, Winner) :- (boardFull(Board) ->  
 calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), calculateWinner(PointsP1, PointsP2, Winner); Winner = 0) .
-
-%value(Board, Player, Value) :- .
-
-%choose_move(Board, Level, Move): .
