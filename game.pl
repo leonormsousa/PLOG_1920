@@ -19,20 +19,6 @@ verifyMove(Board, Line1, Column1, [], []) :- cellEmpty(Board, Line1, Column1), \
 verifyMove(Board, Line1, Column1, Line2, Column2) :- cellEmpty(Board, Line1, Column1), cellEmpty(Board, Line2, Column2), cellColor(Line1, Column1), Line2 =:= -Line1, Column2 =:= -Column1.
 verifyMove(Board, Line1, Column1, Line2, Column2) :- cellEmpty(Board, Line1, Column1), cellEmpty(Board, Line2, Column2), \+cellColor(Line1, Column1), \+cellColor(Line2, Column2), \+adjacentPieces(Line1, Column1, Line2, Column2).
 
-verifyCellMoves(_, [], []).
-verifyCellMoves(Board, [Line1, Column1, Line2, Column2], ValidMoves):- (verifyMove(Board,Line1, Column1, Line2, Column2) -> append([], [Line1, Column1, Line2, Column2], ValidMoves);!).
-verifyCellMoves(Board, [ [Line1, Column1, Line2, Column2] | T], ValidMoves):- (verifyMove(Board, Line1, Column1, Line2, Column2)-> verifyCellMoves(Board, T, AuxValidMoves), append([Line1, Column1, Line2, Column2], AuxValidMoves, ValidMoves); verifyCellMoves(Board,T, AuxValidMoves)).
-
-generateInnerMoves([], _, _, []).
-generateInnerMoves([[Line | [[Cell, _] | T1] ] | T], Line1,Column1, Moves):- (T1 = [_|_] -> generateInnerMoves([Line, T1 | T], Line1,Column1,AuxMoves); generateInnerMoves(T, Line1, Column1, AuxMoves)), append([[Line1, Column1, Line, Cell]], AuxMoves, Moves).
-
-generateCellMoves(Board, Line1, Column1, CellMoves):- (cellColor(Line1, Column1)->Line2 is -Line1, Column2 is -Column1, append([[Line1,Column1,Line2,Column2]], [], CellMoves); generateInnerMoves(Board, Line1, Column1, CellMoves)).
-
-generateValidMoves([], _, []).
-generateValidMoves([[Line | [[Cell, Value] | T1] ] | T], Player, Moves):- generateCellMoves([[Line | [[Cell, Value] | T1] ] | T], Line, Cell, AllMoves), verifyCellMoves([[Line | [[Cell, Value] | T1] ] | T],AllMoves, CellMoves), (T1 = [_|_] -> generateValidMoves([[Line |T1] |T], Player,AuxMoves);generateValidMoves(T, Player,AuxMoves)), append(CellMoves,AuxMoves,Moves).
-
-valid_moves(Board, Player, ListOfMoves) :- generateValidMoves(Board, Player, ListOfMoves).
-
 changeCell(_, _, [], []).
 changeCell(Player, Column, [[H|T1]|T], NewLine) :- changeCell(Player, Column, T, AuxLine), (H=Column -> append([[Column, Player]], AuxLine, NewLine); append([[H|T1]], AuxLine, NewLine)).
 
