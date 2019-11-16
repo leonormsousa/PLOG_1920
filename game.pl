@@ -8,8 +8,7 @@ adjacentPieces(Line1, Column1, Line2, Column2) :- Line1 =:= Line2 + 1, Column1 =
 adjacentPieces(Line1, Column1, Line2, Column2) :- Line1 =:= Line2 - 1, Column1 =:= Column2 + 1.
 adjacentPieces(Line1, Column1, Line2, Column2) :- Line1 =:= Line2 - 1, Column1 =:= Column2 - 1.
 
-cellColor(Line, _) :- Line =:= -2.
-cellColor(Line, _) :- Line =:= 2.
+cellColor(Line, _) :- abs(Line) =:= 2.
 cellColor(Line, Column) :- abs(Line) + abs(Column) =:= 4.
 
 verifyMove(Board, Line1, Column1, [], []) :- cellEmpty(Board, Line1, Column1), \+cellColor(Line1, Column1).

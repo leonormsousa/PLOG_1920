@@ -89,6 +89,9 @@ displayLine([H|T]) :- (H<0 -> write(H); write(' '), write(H)), (H>0 -> N1 is H+1
 displayBoard([]).
 displayBoard([H|T]) :- displayLine(H), displayBoard(T).
 
+%display_game(+Board,+Player)
+display_game(Board, _) :- displayBoard(Board).
+
 writeError :- write('\n That play is not possible. \n\n').
 writeError(M) :- write('\n'), write(M), write('\n\n').
 writeWinner(Winner) :- write('The Winner is:  P'), write(Winner), write('\n').

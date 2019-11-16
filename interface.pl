@@ -1,10 +1,10 @@
 game(Board, Player1, Player2, Difficulty, PassNumber) :-
-    (PassNumber >= 2 -> game_over_sure(Board, Winner), writeWinner(Winner), !;
+    (PassNumber >= 2 -> game_over_sure(Board, Winner), writeWinner(Winner), break;
     (Player1 = 'C2' -> choose_move(Board, Difficulty, 2, MoveAux), append([2], MoveAux, Move),
         (move(Move, Board, NewBoard) ->
             displayBoard(NewBoard),
             game_over(NewBoard, Winner), (Winner \= 0 ->                     
-            writeWinner(Winner);
+            writeWinner(Winner), break;
             game(NewBoard, Player2, Player1, Difficulty, 0)); 
             writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty, 0));
             %MoveAux = [Line1, Column1, Line2, Column2]
@@ -12,7 +12,7 @@ game(Board, Player1, Player2, Difficulty, PassNumber) :-
                  (move(Move, Board, NewBoard) ->
                     displayBoard(NewBoard),
                     game_over(NewBoard, Winner), (Winner \= 0 ->                     
-                    writeWinner(Winner);
+                    writeWinner(Winner), break;
                     game(NewBoard, Player2, Player1, Difficulty, 0)); 
                     writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty, 0));
                 write('\n--> P'), write(Player1), write(': Choose a Line for Piece1 '), read(Line1),
@@ -36,7 +36,7 @@ game(Board, Player1, Player2, Difficulty, PassNumber) :-
                 (move([Player1, Line1, Column1, Line2, Column2], Board, NewBoard) ->
                     displayBoard(NewBoard),
                     game_over(NewBoard, Winner), (Winner \= 0 ->                     
-                    writeWinner(Winner);
+                    writeWinner(Winner), break;
                     game(NewBoard, Player2, Player1, Difficulty, 0)); 
                     writeError, displayBoard(Board), game(Board, Player1, Player2, Difficulty, 0))))).
 
