@@ -20,6 +20,7 @@ changeCell(_, _, [], []).
 changeCell(Player, Column, [[H|T1]|T], NewLine) :- changeCell(Player, Column, T, AuxLine), (H=Column -> append([[Column, Player]], AuxLine, NewLine); append([[H|T1]], AuxLine, NewLine)).
 
 implement_move(_, _, _, [], []).
+implement_move(_, [], [], Board, Board).
 implement_move(Player, Line, Column, [[H|T1]|T], NewBoard) :- implement_move(Player, Line, Column, T, AuxBoard), (H=Line -> changeCell(Player, Column, T1, NewLine), append([[H|NewLine]], AuxBoard, NewBoard); append([[H|T1]], AuxBoard, NewBoard)).
 
 implement_moves([Player,Line1,Column1,Line2,Column2], Board, NewBoard) :- implement_move(Player, Line1, Column1, Board, BoardAux), implement_move(Player, Line2, Column2, BoardAux, NewBoard).
@@ -91,7 +92,7 @@ maxlist([Head|Tail],Max) :-
     Max is TailMax.
 
 
-calculateWinner([], [], 0).
+calculateWinner([], [], 3).
 calculateWinner([], _, 1).
 calculateWinner(_, [], 2).
 calculateWinner(PointsP1, PointsP2, Winner):-  maxlist(PointsP1, MaxP1), maxlist(PointsP2, MaxP2),
@@ -100,6 +101,8 @@ calculateWinner(PointsP1, PointsP2, Winner):-  maxlist(PointsP1, MaxP1), maxlist
                             deleteElement(PointsP2, MaxP2, [], NewPointsP2), 
                             calculateWinner(NewPointsP1,NewPointsP2, Winner); 
                             (MaxP2 > MaxP1 -> Winner = 2; Winner = 1)).
+
+game_over_sure(Board, Winner) :- calculatePoints(Board,1,PointsP1), calculatePoints(Board,2,PointsP2), calculateWinner(PointsP1, PointsP2, Winner).
 
 %game_over(+Board, -Winner)
 game_over(Board, Winner) :- (boardFull(Board) ->  

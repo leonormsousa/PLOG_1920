@@ -91,3 +91,4 @@ displayBoard([H|T]) :- displayLine(H), displayBoard(T).
 
 writeError :- write('\n That play is not possible. \n\n').
 writeError(M) :- write('\n'), write(M), write('\n\n').
+writeWinner(Winner) :- write('The Winner is:  P'), write(Winner), write('\n').

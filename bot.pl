@@ -35,8 +35,33 @@ checkLineForIsolatedMove(Board, [Cell | T], Line, Moves):- checkLineForIsolatedM
 generateIsolatedMove(_, [], []).
 generateIsolatedMove(Board, [[Line | Cells] | T], Moves):- generateIsolatedMove(Board, T, MovesAux), checkLineForIsolatedMove(Board, Cells, Line, LineMoves), append(MovesAux, LineMoves, Moves).
 
-%choose_move(+Board, +Level, -Move)
-choose_move(Board, 1, Move):- valid_moves(Board, 1, ValidMovesAux), (ValidMovesAux == [] -> generateIsolatedMove(Board, Board, ValidMoves), calculateBestMove(ValidMoves, Move); calculateBestMove(ValidMovesAux, Move)).
+generateAllMoves(Board, Player, ValidMoves) :- valid_moves(Board, Player, ValidMoves1), generateIsolatedMove(Board, Board, ValidMoves2), append(ValidMoves1, ValidMoves2, ValidMoves).
+
+applyEveryMove(_, [], _, []).
+applyEveryMove(Board, [Move|Moves], Player, Boards) :- applyEveryMove(Board, Moves, Player, BoardsAux), append([Player], Move, MoveComplete), write(5), write(MoveComplete), move(MoveComplete, Board, NewBoard1), write(6), append(BoardsAux, [NewBoard1], Boards).
+
+calculateBoardsWeight([], _, []).
+calculateBoardsWeight([Board|Boards], Player, Weights) :- calculateBoardsWeight(Boards, Weight), value(Board, Player, Value), append(Weight, [Value], Weights).
+
+calculateBestBoard([Board], [Weight], Board, Weight).
+calculateBestBoard([Board|Boards], [Weight|Weights], NewBoard, NewWeight):- calculateBestBoard(Boards, Weights, NewBoardAux, NewWeightAux), (Weight>NewWeightAux -> NewWeight=Weight, NewBoard=Board; NewWeight=NewWeightAux, NewBoard=NewBoardAux).
+
+calculateBestBoard([Board], [Weight], [Move],  Board, Weight, Move).
+calculateBestBoard([Board|Boards], [Weight|Weights], [Move|Moves], NewBoard, NewWeight, NewMove):- calculateBestBoard(Boards, Weights, Moves, NewBoardAux, NewWeightAux, NewMoveAux), (Weight>NewWeightAux -> NewWeight=Weight, NewBoard=Board, NewMove=Move; NewWeight=NewWeightAux, NewBoard=NewBoardAux, NewMove=NewMoveAux).
+
+generatesAllBoards(Boards, 0, Player, NewBoard) :- calculateBoardsWeight(Boards, Player, Weights), calculateBestBoard(Boards, Weights, NewBoard, NewWeight).
+generatesAllBoards([], _, _, []).
+generatesAllBoards([Board| Boards], NumberPlays, Player, BestBoards):- generatesAllBoards(Boards, NumberPlays, Player, BestBoards1), generateAllMoves(Board, ValidMoves), applyEveryMove(Board, ValidMoves, Player, NewBoards1),
+                        NumberPlays1 is NumberPlays-1, (Player==1 -> Player1 is 2; Player1 is 1), generatesAllBoards(NewBoards1, NumberPlays1, Player1, BestBoardsAux), calculateBoardsWeight(BestBoardsAux, Player, Weights), calculateBestBoard(BestBoardsAux, Weights, BestBoard, BestWeight),
+                        append(BestBoards1, [BestBoard], BestBoards).
+chooseBestBoard(Board, NumberPlays, Player, BestMove):- generateAllMoves(Board, ValidMoves), applyEveryMove(Board, ValidMoves, Player, NewBoards1),
+                        write(2), NumberPlays1 is NumberPlays-1, (Player==1 -> Player1 is 2; Player1 is 1), generatesAllBoards(NewBoards1, NumberPlays1, Player1, BestBoards),
+                        write(3), calculateBoardsWeight(BestBoards, Player, Weights), calculateBestBoard(BestBoards, Weights, ValidMoves, BestBoard, BestWeight, BestMove).
+
+%choose_move(+Board, +Level, +Player, -Move)
+choose_move(Board, 1, Player, Move):- generateAllMoves(Board, Player, ValidMoves), calculateBestMove(ValidMoves, Move).
+choose_move(Board, 2, Player, Move):- write(0), chooseBestBoard(Board, 3, Player, Move), write(1).
+choose_move(Board, 3, Player, Move):- chooseBestBoard(Board, 5, Player, Move).
 
 calculateCellsWeight([], 0).
 calculateCellsWeight([[Line, Column] | T], Weight) :- calculateCellsWeight(T, WeightAux), calculateCellWeight(Line, Column, WeightCell), Weight is WeightAux + WeightCell.
