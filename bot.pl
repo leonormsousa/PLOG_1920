@@ -8,7 +8,6 @@ generateMovesFromLine(_, [], _, _, _, _, []).
 generateMovesFromLine(Board, [[CellBoard | _] | T],[Cell | Value], LineBoard, Line, Player, ValidMoves) :- generateMovesFromLine(Board, T, [Cell, Value], LineBoard, Line, Player, ValidMovesAux), (verifyMove(Board, Line, Cell, LineBoard, CellBoard), (Line =:= LineBoard, Cell =:=CellBoard -> fail;!) -> append(ValidMovesAux, [ [Line,Cell, LineBoard,  CellBoard] ], ValidMoves); ValidMoves = ValidMovesAux, !).
 
 generateValidMovesCell(_, [], _, _, _, []).
-generateValidMovesCell(Board, Board, [Cell, _], Line, _, ValidMoves):- cellColor(Line, Cell), cellEmpty(Board, Line, Cell), Line2 is -Line, Column2 is -Cell, ValidMoves = [[Line, Cell, Line2, Column2]].
 generateValidMovesCell(Board, [[LineBoard | Cells ] | T], [Cell, Value], Line, Player, ValidMoves):- generateValidMovesCell(Board, T, [Cell, Value], Line, Player, ValidMovesAux), generateMovesFromLine(Board, Cells, [Cell, Value], LineBoard, Line, Player, ValidFromLine), append(ValidMovesAux, ValidFromLine, ValidMoves).
 
 generateValidMovesLine(_, _, [], _, []).
@@ -18,7 +17,7 @@ generateValidMoves(_, [], _, []).
 generateValidMoves(Board, [[Line| Cells] | T ], Player, ValidMoves):- generateValidMoves(Board, T, Player, ValidMovesAux), generateValidMovesLine(Board, Line, Cells, Player, ValidInLine), append(ValidMovesAux, ValidInLine, ValidMoves).
 
 %valid_moves(+Board, +Player, -ListOfMoves)
-valid_moves(Board, Player, ListOfMoves):-generateValidMoves(Board, Board, Player, ListOfMoves).
+valid_moves(Board, Player, ListOfMoves) :- generateValidMoves(Board, Board, Player, ValidMoves1), generateIsolatedMove(Board, Board, ValidMoves2), append(ValidMoves1, ValidMoves2, ListOfMoves).
 
 calculateMoveScore([], 0).
 calculateMoveScore([Line1, Column1, Line2, Column2], Score) :- calculateCellWeight(Line1, Column1, Weight1), calculateCellWeight(Line2, Column2, Weight2), Score is Weight1+Weight2.
@@ -35,15 +34,11 @@ checkLineForIsolatedMove(Board, [Cell | T], Line, Moves):- checkLineForIsolatedM
 generateIsolatedMove(_, [], []).
 generateIsolatedMove(Board, [[Line | Cells] | T], Moves):- generateIsolatedMove(Board, T, MovesAux), checkLineForIsolatedMove(Board, Cells, Line, LineMoves), append(MovesAux, LineMoves, Moves).
 
-generateAllMoves(Board, Player, ValidMoves) :- valid_moves(Board, Player, ValidMoves1), generateIsolatedMove(Board, Board, ValidMoves2), append(ValidMoves1, ValidMoves2, ValidMoves).
-
 applyEveryMove(_, [], _, []).
 applyEveryMove(Board, [Move|Moves], Player, Boards) :- applyEveryMove(Board, Moves, Player, BoardsAux), append([Player], Move, MoveComplete),  (move(MoveComplete, Board, NewBoard1) -> append(BoardsAux, [NewBoard1], Boards); Boards = BoardsAux).
 
 calculateBoardsWeight([], _, []).
 calculateBoardsWeight([Board|Boards], Player, Weights) :- calculateBoardsWeight(Boards, Player, Weight), value(Board, Player, Value), append(Weight, [Value], Weights).
-
-
 
 calculateBestBoard([], [], [], []).
 calculateBestBoard([Board], [Weight], Board, NewWeight):- NewWeight=Weight.
@@ -73,9 +68,9 @@ chooseBestBoard(Board, NumberPlays, Player, BestMove):- generateAllMoves(Board, 
                        calculateBoardsWeight(BestBoards, Player, Weights), calculateBestBoard(BestBoards, Weights, ValidMoves, BestBoard, BestWeight, BestMove).
 
 %choose_move(+Board, +Level, +Player, -Move)
-choose_move(Board, 1, Player, Move):- generateAllMoves(Board, Player, ValidMoves), calculateBestMove(ValidMoves, Move).
-choose_move(Board, 2, Player, Move):- chooseBestBoard(Board, 2, Player, Move).
-choose_move(Board, 3, Player, Move):- chooseBestBoard(Board, 3, Player, Move).
+choose_move(Board, 1, Player, Move):- chooseBestBoard(Board, 1, Player, Move).
+choose_move(Board, 2, Player, Move):- chooseBestBoard(Board, 3, Player, Move).
+choose_move(Board, 3, Player, Move):- chooseBestBoard(Board, 5, Player, Move).
 
 calculateCellsWeight([], 0).
 calculateCellsWeight([[Line, Column] | T], Weight) :- calculateCellsWeight(T, WeightAux), calculateCellWeight(Line, Column, WeightCell), Weight is WeightAux + WeightCell.
