@@ -55,7 +55,7 @@ generatesBestBoard([Board| Boards], NumberPlays, Player, BestBoard):- generatesB
 
 generateAllBoardsForAll([],_,_,[]).
 generateAllBoardsForAll([Board | Boards], NumberPlays, Player, BestBoards):- generateAllBoardsForAll(Boards,NumberPlays, Player, BestBoardsAux),
-                    generateAllMoves(Board, Player, ValidMoves),  
+                    valid_moves(Board, Player, ValidMoves),  
                     applyEveryMove(Board, ValidMoves, Player, NewBoards1), 
                      NumberPlays1 is NumberPlays-1, (Player==1 -> Player1 = 2; Player1 = 1), 
                     (NumberPlays1 > 0 -> 
@@ -63,12 +63,12 @@ generateAllBoardsForAll([Board | Boards], NumberPlays, Player, BestBoards):- gen
                     append(BestBoardsAux, [BestBoard], BestBoards).
 
 
-chooseBestBoard(Board, NumberPlays, Player, BestMove):- generateAllMoves(Board, Player, ValidMoves), applyEveryMove(Board, ValidMoves, Player, NewBoards1), 
+chooseBestBoard(Board, NumberPlays, Player, BestMove):- valid_moves(Board, Player, ValidMoves), applyEveryMove(Board, ValidMoves, Player, NewBoards1), 
                         NumberPlays1 is NumberPlays-1, (Player==1 -> Player1 is 2; Player1 is 1), generateAllBoardsForAll(NewBoards1, NumberPlays1, Player1, BestBoards), 
                        calculateBoardsWeight(BestBoards, Player, Weights), calculateBestBoard(BestBoards, Weights, ValidMoves, BestBoard, BestWeight, BestMove).
 
 %choose_move(+Board, +Level, +Player, -Move)
-choose_move(Board, 1, Player, Move):- chooseBestBoard(Board, 1, Player, Move).
+choose_move(Board, 1, Player, Move):- valid_moves(Board, Player, ValidMoves), calculateBestMove(ValidMoves, Move).
 choose_move(Board, 2, Player, Move):- chooseBestBoard(Board, 3, Player, Move).
 choose_move(Board, 3, Player, Move):- chooseBestBoard(Board, 5, Player, Move).
 
