@@ -21,11 +21,10 @@ solve(Participants, TotalParticipants, CanDrive, WillDrive, FriendsGroups, Nemes
 
     %Restri��es
     all_distinct(Participants),
-    get_groups(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, 1, LastGroup, [], OutputGroupsAux, []),
-    append(OutputGroupsAux, [LastGroup], OutputGroups),
+    get_groups(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, []),
     length(OutputGroups, GroupSize),
     GroupSize #=< TotalParticipants,
-
+    
     %Fun��o de Avalia��o
     calculateScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, GroupsScore),
     sum(GroupsScore, #=, TotalGroupsScore),
@@ -38,14 +37,41 @@ solve(Participants, TotalParticipants, CanDrive, WillDrive, FriendsGroups, Nemes
     format(' > Duration: ~3d s~n', [Time]).
     %fd_statistics.
 
-get_groups([],_,_,_,_,_,CurrentGroup, CurrentGroupAux, OutputGroups, OutputGroupsAux):- CurrentGroup = CurrentGroupAux, OutputGroups = OutputGroupsAux.
+createGroup(_,[],_,_,_,_,_,_,_, GroupAux, Group):- Group = GroupAux. 
+createGroup(_,_,_,_,_,_,_,_,5, GroupAux, Group):- Group = GroupAux.
+createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, NewCanDrive, NewWillDrive, GroupSize, GroupAux, Group):-
+    member(NewElement, Others), 
+    (FriendsGroup \= [] -> 
+        member(NewElement, FriendsGroup);
+        \+member(NewElement, NemesisGroup)),
+    delete(Others, NewElement, NewOthers),
+    delete(FriendsGroup, NewElement, NewFriendsGroup),
+    delete(CanDrive, NewElement, NewCanDriveAux),
+    delete(WillDrive, NewElement, NewWillDriveAux),
+    append(GroupAux, [NewElement], NewGroup),
+    length(NewGroup, GroupSizeAux),
+    createGroup(Element, NewOthers, CanDrive, WillDrive, NewFriendsGroup, NemesisGroup, NewCanDriveAux, NewWillDriveAux, GroupSizeAux, NewGroup, Group).
+    
+delete_elements(List,[],NewListAux):- NewListAux = List.
+delete_elements(List, [Element | Others], NewList):-
+    delete_elements(List, Others, NewListAux),
+    delete(NewListAux, Element, NewList).
 
-get_groups([Element | Others], CanDrive, WillDrive, FriendsGroups, NemesisGroups, AuxIndex, CurrentGroup, CurrentGroupAux, OutputGroups, OutputGroupsAux):-
-    (Index is AuxIndex mod 2, Index \= 0 -> 
-        append(CurrentGroupAux, [Element], CurrentGroupAux2), OutputGroups2 = OutputGroupsAux; 
-        Index = 1, append(OutputGroupsAux, [CurrentGroupAux], OutputGroups2), CurrentGroupAux2 = [Element]),
-    AuxIndex2 is AuxIndex +1,
-    get_groups(Others, CanDrive, WillDrive, FriendsGroups, NemesisGroups, AuxIndex2, CurrentGroup, CurrentGroupAux2, OutputGroups, OutputGroups2).
+delete_elements_and_groups([],_,[],[],[],[],[]).
+delete_elements_and_groups([Element | Others], Group, [FriendsGroup | OtherFriends], [NemesisGroups | OtherNemesis], NewElements, NewFriendsGroup, NewNemesisGroups):-
+    delete_elements_and_groups(Others, Group, OtherFriends, OtherNemesis,NewElementsAux, NewFriendsGroupAux, NewNemesisGroupsAux),
+    (\+member(Element, Group) -> 
+        append(NewElementsAux, [Element], NewElements), append(NewFriendsGroupAux, [FriendsGroup], NewFriendsGroup), append(NewNemesisGroupsAux, [NemesisGroups], NewNemesisGroups);
+        NewElements = NewElementsAux, NewFriendsGroup = NewFriendsGroupAux, NewNemesisGroups = NewNemesisGroupsAux).
+
+get_groups([],_,_,_,_, OutputGroups, OutputGroupsAux):- OutputGroups = OutputGroupsAux.
+get_groups([Element | Others], CanDrive, WillDrive, [FriendsGroup | OthersFriendsGroups], [NemesisGroup | OtherNemesisGroups], OutputGroups, OutputGroupsAux):-
+    createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, _, _, 1, [Element], Group),
+    delete_elements_and_groups(Others, Group, OthersFriendsGroups, OtherNemesisGroups, NewOthers, NewFriendsGroup, NewNemesisGroups),
+    delete_elements(CanDrive, Group, NewCanDrive),
+    delete_elements(WillDrive, Group, NewWillDrive),
+    append(OutputGroupsAux, [Group], OutputGroups2),
+    get_groups(NewOthers, NewCanDrive, NewWillDrive, NewFriendsGroup, NewNemesisGroups, OutputGroups, OutputGroups2).
 
 calculateElementScore(_,_,_,_,_,_,[],0).
 calculateElementScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, Element, [ Member | Group], Score):- 
@@ -63,7 +89,11 @@ calculateGroupScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGro
 findDriver([],_,_,0).
 findDriver([Element | Group], CanDrive, WillDrive, FinalScore):-
     findDriver(Group, CanDrive,WillDrive, FinalScoreAux),
-    (member(Element, WillDrive) -> ScoreDriver = 1; member(Element, CanDrive) -> ScoreDriver = 0; ScoreDriver = -1), 
+    (member(Element, WillDrive) -> 
+        ScoreDriver = 1; 
+        (member(Element, CanDrive) -> 
+            ScoreDriver = 0 ; 
+            ScoreDriver = -1 )), 
     FinalScore is FinalScoreAux + ScoreDriver.
     
 
@@ -76,7 +106,7 @@ calculateScore(Participants , CanDrive, WillDrive, FriendsGroups, NemesisGroups,
     ComparableValue is 0 - GroupSize,
     NeutralValue is 1 - GroupSize, 
     (ScoreDriverAux > ComparableValue -> 
-        (ScoreDriverAux > NeutralValue -> ScoreDriver = 1; ScoreDriver = 0); ScoreDriver = -1),
+        (ScoreDriverAux > NeutralValue -> ScoreDriver = 1; ScoreDriver = 0); fail),
     TotalScore is Score + ScoreDriver, 
     append(GroupsScoreAux, [TotalScore], GroupsScore).
 
