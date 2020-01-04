@@ -37,9 +37,9 @@ solve(Participants, TotalParticipants, CanDrive, WillDrive, FriendsGroups, Nemes
     format(' > Duration: ~3d s~n', [Time]).
     %fd_statistics.
 
-createGroup(_,[],_,_,_,_,_,_,_, GroupAux, Group):- Group = GroupAux. 
-createGroup(_,_,_,_,_,_,_,_,5, GroupAux, Group):- Group = GroupAux.
-createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, NewCanDrive, NewWillDrive, GroupSize, GroupAux, Group):-
+createGroup(_,[],_,_,_,_,_, GroupAux, Group):- Group = GroupAux. 
+createGroup(_,_,_,_,_,_,5, GroupAux, Group):- Group = GroupAux.
+createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, GroupSize, GroupAux, Group):-
     member(NewElement, Others), 
     (FriendsGroup \= [] -> 
         member(NewElement, FriendsGroup);
@@ -50,7 +50,7 @@ createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, Ne
     delete(WillDrive, NewElement, NewWillDriveAux),
     append(GroupAux, [NewElement], NewGroup),
     length(NewGroup, GroupSizeAux),
-    createGroup(Element, NewOthers, CanDrive, WillDrive, NewFriendsGroup, NemesisGroup, NewCanDriveAux, NewWillDriveAux, GroupSizeAux, NewGroup, Group).
+    createGroup(Element, NewOthers, NewCanDriveAux, NewWillDriveAux, NewFriendsGroup, NemesisGroup, GroupSizeAux, NewGroup, Group).
     
 delete_elements(List,[],NewListAux):- NewListAux = List.
 delete_elements(List, [Element | Others], NewList):-
@@ -66,7 +66,7 @@ delete_elements_and_groups([Element | Others], Group, [FriendsGroup | OtherFrien
 
 get_groups([],_,_,_,_, OutputGroups, OutputGroupsAux):- OutputGroups = OutputGroupsAux.
 get_groups([Element | Others], CanDrive, WillDrive, [FriendsGroup | OthersFriendsGroups], [NemesisGroup | OtherNemesisGroups], OutputGroups, OutputGroupsAux):-
-    createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, _, _, 1, [Element], Group),
+    createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, 1, [Element], Group),
     delete_elements_and_groups(Others, Group, OthersFriendsGroups, OtherNemesisGroups, NewOthers, NewFriendsGroup, NewNemesisGroups),
     delete_elements(CanDrive, Group, NewCanDrive),
     delete_elements(WillDrive, Group, NewWillDrive),
