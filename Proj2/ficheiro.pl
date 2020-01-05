@@ -7,82 +7,119 @@ displayResults(Participants, OutputGroups, TotalGroupsScore) :-
     write(' > OUTPUT GROUPS: '), write(OutputGroups), nl,
     write(' > OUTPUT SCORE: '), write(TotalGroupsScore), nl.
 
-carpooling(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups) :-
+%Participants -> [number, [friends], [nemesis]].
+
+carpooling(Participants, CanDrive, WillDrive) :-
     length(Participants, TotalParticipants),
-    solve(Participants, TotalParticipants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, TotalGroupsScore),
+    solve(Participants, TotalParticipants, CanDrive, WillDrive, OutputGroups, TotalGroupsScore),
     displayResults(Participants, OutputGroups, TotalGroupsScore).
 
-solve(Participants, TotalParticipants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, TotalGroupsScore) :-
+solve(Participants, TotalParticipants, CanDrive, WillDrive, OutputGroups, TotalGroupsScore) :-
     statistics(walltime, [Start,_]),
 
     %Vari�veis de Decis�o
     MaxGroups is TotalParticipants div 2,
-    domain(Participants, 1, TotalParticipants), 
+   % domain(Participants, 1, TotalParticipants), 
 
     %Restri��es
-    all_distinct(Participants),
-    get_groups(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, []),
+    %all_distinct(Participants),
+    get_groups(Participants, CanDrive, WillDrive, OutputGroups, []),
     length(OutputGroups, GroupSize),
     GroupSize #=< TotalParticipants,
-    
+    append(OutputGroups, Vars),
+ %  all_distinct(Vars),
+    write(Vars),
+
     %Fun��o de Avalia��o
-    calculateScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroups, GroupsScore),
+    calculateScore(Participants, CanDrive, WillDrive, OutputGroups, GroupsScore),
     sum(GroupsScore, #=, TotalGroupsScore),
    
     %Labeling
-    append(OutputGroups, Vars),
     labeling([maximize(TotalGroupsScore)], Vars),
     statistics(walltime, [End,_]),
 	Time is End - Start,
     format(' > Duration: ~3d s~n', [Time]).
     %fd_statistics.
 
-createGroup(_,[],_,_,_,_,_, GroupAux, Group):- Group = GroupAux. 
-createGroup(_,_,_,_,_,_,5, GroupAux, Group):- Group = GroupAux.
-createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, GroupSize, GroupAux, Group):-
-    member(NewElement, Others), 
+delete_element([],_,[]).
+delete_element([[Element | T] | Others], ElementToDel, NewList):-
+    delete_element(Others, ElementToDel, NewListAux),
+    (Element \= ElementToDel ->
+        append(NewListAux,[[Element|T]], NewList); NewList = NewListAux).
+
+delete_occurencies([],_,[]).
+delete_occurencies([[Element, FriendsGroup, NemesisGroup] | Others], ElementToDel, NewOthers):-
+    delete_occurencies(Others, ElementToDel, NewOthersAux),
+    delete(FriendsGroup, ElementToDel, NewFriendsGroup),
+    delete(NemesisGroup, ElementToDel, NewNemesisGroup),
+    append(NewOthersAux,[[Element, NewFriendsGroup, NewNemesisGroup]], NewOthers).
+
+delete_friends([],_,[]).
+delete_friends([ Element | Others], ElementToDel, NewList):-
+    delete_friends(Others, ElementToDel, NewListAux),
+    (Element \= ElementToDel ->
+        append(NewListAux,[Element], NewList); NewList = NewListAux).
+
+createGroup(_,Others,NewOthers,[],_,_,_, GroupAux, Group):- Group = GroupAux, NewOthers = Others. 
+createGroup(_,Others,NewOthers,_,_,_,5, GroupAux, Group):- Group = GroupAux, NewOthers = Others.
+createGroup([Element, FriendsGroup, NemesisGroup], OthersAux, NewOthers, Participants, CanDrive, WillDrive, GroupSize, GroupAux, Group):-
+    member(NewElement, Participants), 
     (FriendsGroup \= [] -> 
         member(NewElement, FriendsGroup);
         \+member(NewElement, NemesisGroup)),
-    delete(Others, NewElement, NewOthers),
-    delete(FriendsGroup, NewElement, NewFriendsGroup),
+    delete_element(OthersAux, NewElement, NewOthersAux),
+    delete_occurencies(NewOthersAux, NewElement, NewOthers2),
+    delete_friends(FriendsGroup, NewElement, NewFriendsGroup),
     delete(CanDrive, NewElement, NewCanDriveAux),
+    delete(Participants, NewElement, NewParticipants),
     delete(WillDrive, NewElement, NewWillDriveAux),
     append(GroupAux, [NewElement], NewGroup),
     length(NewGroup, GroupSizeAux),
-    createGroup(Element, NewOthers, NewCanDriveAux, NewWillDriveAux, NewFriendsGroup, NemesisGroup, GroupSizeAux, NewGroup, Group).
+    createGroup([Element, NewFriendsGroup, NemesisGroup], NewOthers2, NewOthers, NewParticipants, NewCanDriveAux, NewWillDriveAux, GroupSizeAux, NewGroup, Group).
     
-delete_elements(List,[],NewListAux):- NewListAux = List.
-delete_elements(List, [Element | Others], NewList):-
-    delete_elements(List, Others, NewListAux),
-    delete(NewListAux, Element, NewList).
 
-delete_elements_and_groups([],_,[],[],[],[],[]).
-delete_elements_and_groups([Element | Others], Group, [FriendsGroup | OtherFriends], [NemesisGroups | OtherNemesis], NewElements, NewFriendsGroup, NewNemesisGroups):-
-    delete_elements_and_groups(Others, Group, OtherFriends, OtherNemesis,NewElementsAux, NewFriendsGroupAux, NewNemesisGroupsAux),
-    (\+member(Element, Group) -> 
-        append(NewElementsAux, [Element], NewElements), append(NewFriendsGroupAux, [FriendsGroup], NewFriendsGroup), append(NewNemesisGroupsAux, [NemesisGroups], NewNemesisGroups);
-        NewElements = NewElementsAux, NewFriendsGroup = NewFriendsGroupAux, NewNemesisGroups = NewNemesisGroupsAux).
+delete_elements(_,[],Aux, Elements):- Elements = Aux.
+delete_elements(Participants, [Element | Group], NewElementsAux, NewElements):-
+    delete_element(NewElementsAux, Element, NewElementsAux2),
+    delete_elements(Participants, Group, NewElementsAux2, NewElements).
 
-get_groups([],_,_,_,_, OutputGroups, OutputGroupsAux):- OutputGroups = OutputGroupsAux.
-get_groups([Element | Others], CanDrive, WillDrive, [FriendsGroup | OthersFriendsGroups], [NemesisGroup | OtherNemesisGroups], OutputGroups, OutputGroupsAux):-
-    createGroup(Element, Others, CanDrive, WillDrive, FriendsGroup, NemesisGroup, 1, [Element], Group),
-    delete_elements_and_groups(Others, Group, OthersFriendsGroups, OtherNemesisGroups, NewOthers, NewFriendsGroup, NewNemesisGroups),
-    delete_elements(CanDrive, Group, NewCanDrive),
-    delete_elements(WillDrive, Group, NewWillDrive),
+delete_drivers([],_,[]).
+delete_drivers([Driver | Others], Group, NewDrivers):-
+    delete_drivers(Drivers, Group, NewDriversAux),
+    (\+member(Driver, Group)->
+        append(NewDriversAux, [Driver], NewDrivers);
+        NewDrivers = NewDriversAux).
+
+getParticipants([],[]).
+getParticipants([[Element | T] |Others], Participants):-
+    getParticipants(Others, ParticipantsAux),
+    append(ParticipantsAux,[Element], Participants).
+
+get_groups([],_,_, OutputGroups, OutputGroupsAux):- OutputGroups = OutputGroupsAux.
+get_groups([ [Element, FriendsGroup, NemesisGroup] | Others], CanDrive, WillDrive, OutputGroups, OutputGroupsAux):-
+    getParticipants(Others, Participants),
+    createGroup([Element ,FriendsGroup, NemesisGroup], Others, NewOthers, Participants, CanDrive, WillDrive, 1, [Element], Group),
+    delete_drivers(CanDrive, Group, NewCanDrive),
+    delete_drivers(WillDrive, Group, NewWillDrive),
     append(OutputGroupsAux, [Group], OutputGroups2),
-    get_groups(NewOthers, NewCanDrive, NewWillDrive, NewFriendsGroup, NewNemesisGroups, OutputGroups, OutputGroups2).
+    get_groups(NewOthers, NewCanDrive, NewWillDrive, OutputGroups, OutputGroups2).
 
 calculateElementScore(_,_,_,_,_,_,[],0).
-calculateElementScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, Element, [ Member | Group], Score):- 
-    calculateElementScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, Element, Group, ScoreAux), 
+calculateElementScore(Participants, CanDrive, WillDrive, Element, FriendsGroups, NemesisGroups, [ Member | Group], Score):- 
+    calculateElementScore(Participants, CanDrive, WillDrive, Element, FriendsGroups, NemesisGroups, Group, ScoreAux), 
     (member(Member, FriendsGroups) -> AuxScore = 1; (member(Member, NemesisGroups) -> AuxScore = -1; AuxScore = 0)),
     Score is AuxScore + ScoreAux.
 
-calculateGroupScore(_,_,_,_,_,[],0).
-calculateGroupScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, [Element | Group],  Score):- 
-    calculateGroupScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, Group, ScoreAux),
-    calculateElementScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, Element, Group, ElementScore),
+findFriendsAndNemesis([[Participant , Friends, Nemesis] | Others], Element, FriendsGroup, NemesisGroup):-
+    (Element == Participant -> 
+        FriendsGroup = Friends, NemesisGroup = Nemesis;
+        findFriendsAndNemesis(Others, Element, FriendsGroup, NemesisGroup)).
+
+calculateGroupScore(_,_,_,[],0).
+calculateGroupScore(Participants, CanDrive, WillDrive, [Element | Group],  Score):- 
+    calculateGroupScore(Participants, CanDrive, WillDrive, Group, ScoreAux),
+    findFriendsAndNemesis(Participants, Element, FriendsGroups, NemesisGroups),
+    calculateElementScore(Participants, CanDrive, WillDrive, Element, FriendsGroups, NemesisGroups, Group, ElementScore),
     Score is ScoreAux + ElementScore.
 
 
@@ -97,10 +134,10 @@ findDriver([Element | Group], CanDrive, WillDrive, FinalScore):-
     FinalScore is FinalScoreAux + ScoreDriver.
     
 
-calculateScore(_,_,_,_,_,[], []).
-calculateScore(Participants , CanDrive, WillDrive, FriendsGroups, NemesisGroups, [OutputGroup | T], GroupsScore) :-
-    calculateScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, T, GroupsScoreAux), 
-    calculateGroupScore(Participants, CanDrive, WillDrive, FriendsGroups, NemesisGroups, OutputGroup, Score), 
+calculateScore(_,_,_,[], []).
+calculateScore(Participants , CanDrive, WillDrive,[OutputGroup | T], GroupsScore) :-
+    calculateScore(Participants, CanDrive, WillDrive, T, GroupsScoreAux), 
+    calculateGroupScore(Participants, CanDrive, WillDrive, OutputGroup, Score), 
     findDriver(OutputGroup, CanDrive, WillDrive, ScoreDriverAux), 
     length(OutputGroup, GroupSize),
     ComparableValue is 0 - GroupSize,
