@@ -8,7 +8,6 @@ displayResults(Participants, OutputGroups, TotalGroupsScore) :-
     write(' > OUTPUT SCORE: '), write(TotalGroupsScore), nl.
 
 %Participants -> [number, [friends], [nemesis]].
-
 getParticipants([],[]).
 getParticipants([[Element | _] |Others], Participants):-
     getParticipants(Others, ParticipantsAux),
